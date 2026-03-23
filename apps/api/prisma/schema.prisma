@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String      @id @default(cuid())
+  email           String      @unique
+  name            String
+  companyName     String
+  hederaAccountId String?
+  evmAddress      String?
+  role            UserRole    @default(SME)
+  passwordHash    String?
+  invoices        Invoice[]
+  deposits        LPDeposit[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Invoice {
+  id               String        @id @default(cuid())
+  invoiceNumber    String        @unique
+  debtorName       String
+  debtorAddress    String
+  debtorHederaId   String?
+  amount           Float
+  currency         String        @default("USD")
+  dueDate          DateTime
+  ownerId          String
+  owner            User          @relation(fields: [ownerId], references: [id])
+  ipfsHash         String?
+  htsTokenId       String?
+  htsSerialNumber  Int?
+  hcsReputationSeq String?
+  status           InvoiceStatus @default(UPLOADED)
+  riskScore        Float?
+  riskTier         RiskTier?
+  advanceRate      Float?
+  advanceAmount    Float?
+  advanceTxId      String?
+  repaidAt         DateTime?
+  repayTxId        String?
+  advances         Advance[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Advance {
+  id         String    @id @default(cuid())
+  invoiceId  String
+  invoice    Invoice   @relation(fields: [invoiceId], references: [id])
+  amount     Float
+  feePercent Float
+  txId       String
+  repaid     Boolean   @default(false)
+  repaidAt   DateTime?
+  repayTxId  String?
+  createdAt  DateTime  @default(now())
+}
+
+model LPDeposit {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  amount           Float
+  currency         String    @default("USDC-H")
+  bonzoShareTokens Float?
+  txId             String
+  withdrawn        Boolean   @default(false)
+  withdrawnAt      DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+model DebtorReputation {
+  id               String   @id @default(cuid())
+  debtorName       String
+  debtorHederaId   String?  @unique
+  hcsTopicId       String
+  totalInvoices    Int      @default(0)
+  paidOnTime       Int      @default(0)
+  latePaid         Int      @default(0)
+  defaulted        Int      @default(0)
+  avgDaysToPayment Float?
+  reputationScore  Float    @default(50)
+  lastUpdated      DateTime @default(now())
+}
+
+enum UserRole {
+  SME
+  LENDER
+  ADMIN
+}
+
+enum InvoiceStatus {
+  UPLOADED
+  MINTED
+  SCORED
+  ADVANCED
+  REPAID
+  DEFAULTED
+}
+
+enum RiskTier {
+  AAA
+  AA
+  A
+  BBB
+  BB
+  B
+  CCC
+}

@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "copilot/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-typecheck-api:
+    name: API — Lint & Typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+
+  test-api:
+    name: API — Jest Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      DATABASE_URL: postgresql://tradeflow:tradeflow@localhost:5432/tradeflow
+      HEDERA_OPERATOR_ID: "0.0.1234"
+      HEDERA_OPERATOR_KEY: "302e020100300506032b6570042204200000000000000000000000000000000000000000000000000000000000000000"
+      HEDERA_NETWORK: testnet
+      HEDERA_INVOICE_TOKEN_ID: "0.0.5678"
+      EVM_PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000001"
+      BONZO_VAULT_ADDRESS: "0x0000000000000000000000000000000000000000"
+      USDC_H_ADDRESS: "0x0000000000000000000000000000000000000001"
+      NEXTAUTH_SECRET: "test-secret"
+      OPENAI_API_KEY: "sk-test"
+      PINATA_API_KEY: "test"
+      PINATA_SECRET_API_KEY: "test"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  lint-typecheck-web:
+    name: Web — Lint & Typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+  contracts:
+    name: Contracts — Compile & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
