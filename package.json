@@ -1,0 +1,18 @@
+{
+  "name": "tradeflow",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/web\" \"npm run dev --workspace=apps/api\"",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/api --workspace=apps/web",
+    "test": "npm run test --workspace=apps/api --workspace=packages/contracts",
+    "setup:hedera": "node apps/api/dist/scripts/setupHedera.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
